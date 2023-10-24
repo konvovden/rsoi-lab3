@@ -1,0 +1,56 @@
+syntax = "proto3";
+
+option csharp_namespace = "PaymentService.Api";
+
+package payment;
+
+service PaymentService {
+    rpc GetPayment(GetPaymentRequest) returns (GetPaymentResponse);
+    rpc GetPayments(GetPaymentsRequest) returns (GetPaymentsResponse);
+    rpc CreatePayment(CreatePaymentRequest) returns (CreatePaymentResponse);
+    rpc CancelPayment(CancelPaymentRequest) returns (CancelPaymentResponse);
+}
+
+enum PaymentStatus {
+    PAID = 0;
+    CANCELED = 1;
+}
+
+message Payment {
+    string id = 1;
+    PaymentStatus status = 2;
+    int32 price = 3;
+}
+
+message GetPaymentRequest {
+    string id = 1;
+}
+
+message GetPaymentResponse {
+    Payment payment = 1;
+}
+
+message GetPaymentsRequest {
+    repeated string ids = 1;
+}
+
+message GetPaymentsResponse {
+    repeated Payment payments = 1;
+    repeated string not_found_ids = 2;
+}
+
+message CreatePaymentRequest {
+    int32 price = 1;   
+}
+
+message CreatePaymentResponse {
+    Payment payment = 1;
+}
+
+message CancelPaymentRequest {
+    string id = 1;
+}
+
+message CancelPaymentResponse {
+    Payment payment = 1;
+}

@@ -1,0 +1,86 @@
+name: Service Workflow base
+on:
+  workflow_call:
+    inputs:
+      service-name:
+        required: true
+        type: string
+      project-name:
+        required: true
+        type: string
+
+env:
+  BASE_PATH: ./services/${{ inputs.project-name }}
+
+jobs:
+  build: 
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '7.0.x'
+
+      - name: Build app
+        run: dotnet publish ${{ env.BASE_PATH }}/src/${{ inputs.project-name }}.Server/${{ inputs.project-name }}.Server.csproj -c Release -o ${{ inputs.project-name }}Build/
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ inputs.service-name }}-binaries
+          path: ${{ inputs.project-name }}Build/
+
+  unit-tests:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '7.0.x'
+
+      - name: Run Unit Tests
+        run: dotnet test ${{ env.BASE_PATH }}/src/${{ inputs.project-name }}.sln
+
+  publish:
+    name: Publish Docker image
+    runs-on: ubuntu-latest
+    needs: unit-tests
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ inputs.service-name }}-binaries
+          path: ${{ inputs.project-name }}Build/
+
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Publish docker image
+        uses: docker/build-push-action@v5
+        with:
+          push: true
+          tags: konvovden/rsoi:${{ inputs.service-name }}
+          context: .
+          file: ${{ env.BASE_PATH }}/Dockerfile

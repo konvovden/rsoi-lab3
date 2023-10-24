@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net7.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\CarsService.Core\CarsService.Core.csproj" />
+      <ProjectReference Include="..\CarsService.Database.Context\CarsService.Database.Context.csproj" />
+    </ItemGroup>
+
+</Project>

@@ -1,0 +1,83 @@
+syntax = "proto3";
+
+option csharp_namespace = "RentalService.Api";
+
+package rental;
+
+service RentalService {
+    rpc GetUserRentals(GetUserRentalsRequest) returns (GetUserRentalsResponse);
+    rpc GetUserRental(GetUserRentalRequest) returns (GetUserRentalResponse);
+    rpc CreateRental(CreateRentalRequest) returns (CreateRentalResponse);
+    rpc CancelRental(CancelRentalRequest) returns (CancelRentalResponse);
+    rpc FinishRental(FinishRentalRequest) returns (FinishRentalResponse);
+}
+
+enum RentalStatus {
+    NEW = 0;
+    IN_PROGRESS = 1;
+    FINISHED = 2;
+    CANCELED = 3;
+}
+
+message Rental {
+    string id = 1;
+    string username = 2;
+    string payment_id = 3;
+    string car_id = 4;
+    Date date_from = 5;
+    Date date_to = 6;
+    RentalStatus status = 7;
+}
+
+message GetUserRentalsRequest {
+    string username = 1;
+}
+
+message GetUserRentalsResponse {
+    repeated Rental rentals = 1;
+}
+
+message GetUserRentalRequest {
+    string username = 1;
+    string rental_id = 2;
+}
+
+message GetUserRentalResponse {
+    Rental rental = 1;
+}
+
+message CreateRentalRequest {
+    string username = 1;
+    string car_id = 2;
+    string payment_id = 3;
+    Date date_from = 4;
+    Date date_to = 5;
+}
+
+message CreateRentalResponse {
+    Rental rental = 1;
+}
+
+message CancelRentalRequest {
+    string username = 1;
+    string rental_id = 2;
+}
+
+message CancelRentalResponse {
+    Rental rental = 1;
+}
+
+message FinishRentalRequest {
+    string username = 1;
+    string rental_id = 2;
+}
+
+message FinishRentalResponse {
+    Rental rental = 1;
+}
+
+message Date {
+    int32 year = 1;  
+    int32 month = 2;
+    int32 day = 3;
+}
