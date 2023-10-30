@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using CarsService.Api;
+using GatewayService.RetryQueue;
 using GatewayService.Server.Dto.Converters.Rental;
 using GatewayService.Server.StateMachines.RentCar;
 using Microsoft.AspNetCore.Mvc;
@@ -18,14 +19,17 @@ public class RentalController : ControllerBase
     private readonly RentalService.Api.RentalService.RentalServiceClient _rentalServiceClient;
     private readonly CarsService.Api.CarsService.CarsServiceClient _carsServiceClient;
     private readonly PaymentService.Api.PaymentService.PaymentServiceClient _paymentServiceClient;
+    private readonly IRequestsQueue _requestsQueue;
     
     public RentalController(RentalService.Api.RentalService.RentalServiceClient rentalServiceClient, 
         CarsService.Api.CarsService.CarsServiceClient carsServiceClient, 
-        PaymentService.Api.PaymentService.PaymentServiceClient paymentServiceClient)
+        PaymentService.Api.PaymentService.PaymentServiceClient paymentServiceClient, 
+        IRequestsQueue requestsQueue)
     {
         _rentalServiceClient = rentalServiceClient;
         _carsServiceClient = carsServiceClient;
         _paymentServiceClient = paymentServiceClient;
+        _requestsQueue = requestsQueue;
     }
 
     /// <summary>
@@ -104,15 +108,35 @@ public class RentalController : ControllerBase
             RentalId = rentalId
         });
 
-        await _paymentServiceClient.CancelPaymentAsync(new CancelPaymentRequest()
+        try
         {
-            Id = cancelRentalResponse.Rental.PaymentId
-        });
+            await _paymentServiceClient.CancelPaymentAsync(new CancelPaymentRequest()
+            {
+                Id = cancelRentalResponse.Rental.PaymentId
+            });
+        }
+        catch (Exception)
+        {
+            _requestsQueue.AddRequest(() => _paymentServiceClient.CancelPaymentAsync(new CancelPaymentRequest()
+            {
+                Id = cancelRentalResponse.Rental.PaymentId
+            }));
+        }
 
-        await _carsServiceClient.RemoveReserveFromCarAsync(new RemoveReserveFromCarRequest()
+        try
         {
-            Id = cancelRentalResponse.Rental.CarId
-        });
+            await _carsServiceClient.RemoveReserveFromCarAsync(new RemoveReserveFromCarRequest()
+            {
+                Id = cancelRentalResponse.Rental.CarId
+            });
+        }
+        catch (Exception)
+        {
+            _requestsQueue.AddRequest(() => _carsServiceClient.RemoveReserveFromCarAsync(new RemoveReserveFromCarRequest()
+            {
+                Id = cancelRentalResponse.Rental.CarId
+            }));
+        }
 
         return NoContent();
     }
