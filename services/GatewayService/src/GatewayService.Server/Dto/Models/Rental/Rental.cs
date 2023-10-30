@@ -59,7 +59,7 @@ public class Rental
     /// <summary>
     /// Gets or Sets Payment
     /// </summary>
-    [DataMember(Name="payment")]
+    [DataMember(Name="payment", EmitDefaultValue = false)]
     public Payment? Payment { get; set; }
 
     public Rental(string id, 
