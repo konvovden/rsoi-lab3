@@ -1,7 +1,7 @@
 ﻿using System.Runtime.Serialization;
 using Newtonsoft.Json;
 
-namespace GatewayService.Dto.Payments.Enums;
+namespace GatewayService.Server.Dto.Models.Payments.Enums;
 
 /// <summary>
 /// Статус платежа
@@ -19,6 +19,6 @@ public enum PaymentStatus
     /// <summary>
     /// Enum REVERSEDEnum for REVERSED
     /// </summary>
-    [EnumMember(Value = "REVERSED")]
-    Reversed = 2
+    [EnumMember(Value = "CANCELED")]
+    Canceled = 2
 }

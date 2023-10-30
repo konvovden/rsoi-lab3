@@ -1,5 +1,5 @@
 using System.Runtime.Serialization;
-using GatewayService.Dto.Payments.Enums;
+using GatewayService.Server.Dto.Models.Payments.Enums;
 
 namespace GatewayService.Dto.Payments;
 
