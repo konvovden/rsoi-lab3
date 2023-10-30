@@ -1,5 +1,6 @@
 using GatewayService.CircuitBreaker;
 using GatewayService.CircuitBreaker.Extensions;
+using GatewayService.RetryQueue.Extensions;
 using GatewayService.Server.Configuration;
 using GatewayService.Server.Middlewares;
 using Microsoft.OpenApi.Models;
@@ -53,6 +54,7 @@ public class Startup
             .AddInterceptor<CircuitBreakerInterceptor>();
 
         services.AddCircuitBreaker(Configuration);
+        services.AddRetryQueue(Configuration);
     }
 
     // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
