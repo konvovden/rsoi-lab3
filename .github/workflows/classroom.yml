@@ -19,7 +19,7 @@ jobs:
           username: ${{ secrets.DEPLOY_USERNAME }}
           password: ${{ secrets.DEPLOY_PASSWORD }}
           port: ${{ secrets.DEPLOY_PORT }}
-          source: scripts/*
+          source: "scripts/,v3/"
           target: rsoi/tests/
 
       - name: Run API Tests
@@ -30,7 +30,10 @@ jobs:
           username: ${{ secrets.DEPLOY_USERNAME }}
           password: ${{ secrets.DEPLOY_PASSWORD }}
           port: ${{ secrets.DEPLOY_PORT }}
-          script: rsoi/tests/test-script.sh v3 payment-service 8050
+          script: |
+            cd rsoi
+            chmod +x tests/scripts/test-script.sh
+            tests/scripts/test-script.sh tests/v3 payment-service 8050
 
       - uses: education/autograding@v1
         id: autograder
