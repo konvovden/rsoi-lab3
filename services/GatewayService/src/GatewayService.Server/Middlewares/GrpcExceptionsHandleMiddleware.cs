@@ -28,6 +28,7 @@ public class GrpcExceptionsHandleMiddleware
                 StatusCode.PermissionDenied => StatusCodes.Status403Forbidden,
                 StatusCode.Unauthenticated => StatusCodes.Status401Unauthorized,
                 StatusCode.FailedPrecondition => StatusCodes.Status409Conflict,
+                StatusCode.Unavailable => StatusCodes.Status503ServiceUnavailable,
                 _ => StatusCodes.Status500InternalServerError
             };
 
