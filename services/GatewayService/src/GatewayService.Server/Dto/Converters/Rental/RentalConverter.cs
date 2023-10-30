@@ -10,14 +10,15 @@ namespace GatewayService.Server.Dto.Converters.Rental;
 
 public static class RentalConverter
 {
-    public static DtoRental Convert(ApiRental apiRental, ApiCar apiCar, ApiPayment apiPayment)
+    public static DtoRental Convert(ApiRental apiRental, ApiCar? apiCar, ApiPayment? apiPayment)
     {
         return new DtoRental(apiRental.Id,
             RentalStatusConverter.Convert(apiRental.Status),
             DateConverter.Convert(apiRental.DateFrom),
             DateConverter.Convert(apiRental.DateTo),
-            apiCar.Id,
+            apiRental.CarId,
             CarConverter.Convert(apiCar),
+            apiRental.PaymentId,
             PaymentConverter.Convert(apiPayment));
     }
 }

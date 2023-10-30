@@ -47,21 +47,29 @@ public class Rental
     /// Gets or Sets Car
     /// </summary>
     [DataMember(Name="car")]
-    public Car Car { get; set; }
+    public Car? Car { get; set; }
 
+    /// <summary>
+    /// UUID платежа
+    /// </summary>
+    /// <value>UUID платежа</value>
+    [DataMember(Name = "paymentUid")]
+    public string PaymentId { get; set; }
+    
     /// <summary>
     /// Gets or Sets Payment
     /// </summary>
     [DataMember(Name="payment")]
-    public Payment Payment { get; set; }
+    public Payment? Payment { get; set; }
 
     public Rental(string id, 
         RentalStatus status,
         DateOnly dateFrom,
         DateOnly dateTo,
         string carId,
-        Car car,
-        Payment payment)
+        Car? car,
+        string paymentId,
+        Payment? payment)
     {
         Id = id;
         Status = status;
@@ -69,6 +77,7 @@ public class Rental
         DateTo = dateTo;
         CarId = carId;
         Car = car;
+        PaymentId = paymentId;
         Payment = payment;
     }
 }

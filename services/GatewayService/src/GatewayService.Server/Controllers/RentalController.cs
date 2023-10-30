@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using CarsService.Api;
-using GatewayService.Server.Dto.Converters;
 using GatewayService.Server.Dto.Converters.Rental;
+using GatewayService.Server.StateMachines.RentCar;
 using Microsoft.AspNetCore.Mvc;
 using PaymentService.Api;
 using RentalService.Api;
@@ -47,24 +47,18 @@ public class RentalController : ControllerBase
             .Select(r => r.CarId)
             .ToList();
 
-        var getCarsResponse = await _carsServiceClient.GetCarsAsync(new GetCarsRequest()
-        {
-            Ids = { carIds }
-        });
+        var cars = await GetCarsOrDefaultAsync(carIds);
         
         var paymentIds = rentals.Rentals
             .Select(r => r.PaymentId)
             .ToList();
 
-        var getPaymentsResponse = await _paymentServiceClient.GetPaymentsAsync(new GetPaymentsRequest()
-        {
-            Ids = { paymentIds }
-        });
-
+        var payments = await GetPaymentsOrDefaultAsync(paymentIds);
+        
         var rentalsDto = rentals.Rentals
             .Select(r => RentalConverter.Convert(r,
-                getCarsResponse.Cars.First(c => c.Id == r.CarId),
-                getPaymentsResponse.Payments.First(p => p.Id == r.PaymentId)));
+                cars.FirstOrDefault(c => c.Id == r.CarId),
+                payments.FirstOrDefault(p => p.Id == r.PaymentId)));
 
         return Ok(rentalsDto);
     }
@@ -83,31 +77,12 @@ public class RentalController : ControllerBase
     public async Task<IActionResult> ApiV1RentalPost([FromHeader(Name = "X-User-Name")][Required]string username, 
         [FromBody]CreateRentalRequest createRentalRequest)
     {
-        var reserveCarResponse = await _carsServiceClient.ReserveCarAsync(new ReserveCarRequest()
-        {
-            Id = createRentalRequest.CarId
-        });
+        var stateMachine = new RentCarStateMachine(_carsServiceClient, _paymentServiceClient, _rentalServiceClient);
 
-        var days = createRentalRequest.DateTo.DayNumber - createRentalRequest.DateFrom.DayNumber;
-        var totalPrice = reserveCarResponse.Car.Price * days;
+        var rental = await stateMachine.StartAsync(username, createRentalRequest.CarId, createRentalRequest.DateFrom,
+            createRentalRequest.DateTo);
 
-        var createPaymentResponse = await _paymentServiceClient.CreatePaymentAsync(new CreatePaymentRequest()
-        {
-            Price = totalPrice
-        });
-
-        var createRentalResponse = await _rentalServiceClient.CreateRentalAsync(new RentalService.Api.CreateRentalRequest() 
-        {
-            Username = username,
-            CarId = createRentalRequest.CarId,
-            PaymentId = createPaymentResponse.Payment.Id,
-            DateFrom = DateConverter.Convert(createRentalRequest.DateFrom),
-            DateTo = DateConverter.Convert(createRentalRequest.DateTo)
-        });
-
-        return Ok(RentalConverter.Convert(createRentalResponse.Rental,
-            reserveCarResponse.Car,
-            createPaymentResponse.Payment));
+        return Ok(rental);
     }
 
     /// <summary>
@@ -189,16 +164,77 @@ public class RentalController : ControllerBase
             Username = username
         });
 
-        var getCarResponse = await _carsServiceClient.GetCarAsync(new GetCarRequest()
-        {
-            Id = getUserRentalResponse.Rental.CarId
-        });
-        
-        var getPaymentResponse = await _paymentServiceClient.GetPaymentAsync(new GetPaymentRequest()
-        {
-            Id = getUserRentalResponse.Rental.PaymentId
-        });
+        var car = await GetCarOrDefaultAsync(getUserRentalResponse.Rental.CarId);
+        var payment = await GetPaymentOrDefaultAsync(getUserRentalResponse.Rental.PaymentId);
 
-        return Ok(RentalConverter.Convert(getUserRentalResponse.Rental, getCarResponse.Car, getPaymentResponse.Payment));
+        return Ok(RentalConverter.Convert(getUserRentalResponse.Rental, car, payment));
+    }
+
+    private async Task<Car?> GetCarOrDefaultAsync(string carId)
+    {
+        try
+        {
+            var response = await _carsServiceClient.GetCarAsync(new GetCarRequest()
+            {
+                Id = carId
+            });
+
+            return response.Car;
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+    }
+
+    private async Task<Payment?> GetPaymentOrDefaultAsync(string paymentId)
+    {
+        try
+        {
+            var response = await _paymentServiceClient.GetPaymentAsync(new GetPaymentRequest()
+            {
+                Id = paymentId
+            });
+
+            return response.Payment;
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+    }
+
+    private async Task<List<Car>> GetCarsOrDefaultAsync(List<string> carIds)
+    {
+        try
+        {
+            var response = await _carsServiceClient.GetCarsAsync(new GetCarsRequest()
+            {
+                Ids = { carIds }
+            });
+
+            return response.Cars.ToList();
+        }
+        catch (Exception)
+        {
+            return new List<Car>();
+        }
+    }
+    
+    private async Task<List<Payment>> GetPaymentsOrDefaultAsync(List<string> paymentIds)
+    {
+        try
+        {
+            var response = await _paymentServiceClient.GetPaymentsAsync(new GetPaymentsRequest()
+            {
+                Ids = { paymentIds }
+            });
+
+            return response.Payments.ToList();
+        }
+        catch (Exception)
+        {
+            return new List<Payment>();
+        }
     }
 }

@@ -10,6 +10,6 @@ public static class CarsListConverter
         return new CarsList(getCarsListResponse.Page,
             getCarsListResponse.Size,
             getCarsListResponse.TotalAmount,
-            getCarsListResponse.Cars.ToList().ConvertAll(CarConverter.Convert));
+            getCarsListResponse.Cars.ToList().ConvertAll(CarConverter.Convert)!);
     }
 }

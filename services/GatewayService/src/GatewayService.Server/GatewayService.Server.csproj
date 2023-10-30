@@ -18,12 +18,21 @@
         <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
         <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="6.5.0" />
         <PackageReference Include="Swashbuckle.AspNetCore.Newtonsoft" Version="6.5.0" />
+        <PackageReference Include="Stateless" Version="5.13.0" />
     </ItemGroup>
     
     <ItemGroup>
         <Protobuf Include="..\..\..\..\specs\cars_service.proto" GrpcServices="Client" />
         <Protobuf Include="..\..\..\..\specs\rental_service.proto" GrpcServices="Client" />
         <Protobuf Include="..\..\..\..\specs\payment_service.proto" GrpcServices="Client" />
+    </ItemGroup>
+    
+    <ItemGroup>
+      <ProjectReference Include="..\GatewayService.CircuitBreaker\GatewayService.CircuitBreaker.csproj" />
+    </ItemGroup>
+    
+    <ItemGroup>
+      <Folder Include="StateMachines\" />
     </ItemGroup>
     
 </Project>

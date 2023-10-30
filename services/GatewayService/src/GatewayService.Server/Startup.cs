@@ -1,3 +1,5 @@
+using GatewayService.CircuitBreaker;
+using GatewayService.CircuitBreaker.Extensions;
 using GatewayService.Server.Configuration;
 using GatewayService.Server.Middlewares;
 using Microsoft.OpenApi.Models;
@@ -28,20 +30,29 @@ public class Startup
             .GetRequiredSection(nameof(ServicesRoutesConfiguration))
             .Get<ServicesRoutesConfiguration>()!;
         
-        services.AddGrpcClient<CarsService.Api.CarsService.CarsServiceClient>(o =>
-        {
-            o.Address = new Uri(routesConfiguration.CarsServiceUri);
-        });
+        services
+            .AddGrpcClient<CarsService.Api.CarsService.CarsServiceClient>(o =>
+            {
+                o.Address = new Uri(routesConfiguration.CarsServiceUri);
+                
+            })
+            .AddInterceptor<CircuitBreakerInterceptor>();
 
-        services.AddGrpcClient<PaymentService.Api.PaymentService.PaymentServiceClient>(o =>
-        {
-            o.Address = new Uri(routesConfiguration.PaymentServiceUri);
-        });
+        services
+            .AddGrpcClient<PaymentService.Api.PaymentService.PaymentServiceClient>(o =>
+            {
+                o.Address = new Uri(routesConfiguration.PaymentServiceUri);
+            })
+            .AddInterceptor<CircuitBreakerInterceptor>();
 
-        services.AddGrpcClient<RentalService.Api.RentalService.RentalServiceClient>(o =>
-        {
-            o.Address = new Uri(routesConfiguration.RentalServiceUri);
-        });
+        services
+            .AddGrpcClient<RentalService.Api.RentalService.RentalServiceClient>(o =>
+            {
+                o.Address = new Uri(routesConfiguration.RentalServiceUri);
+            })
+            .AddInterceptor<CircuitBreakerInterceptor>();
+
+        services.AddCircuitBreaker(Configuration);
     }
 
     // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
